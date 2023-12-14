@@ -1,0 +1,72 @@
+***JDBC is an API that can access any kind of tabular data in a relational database. It is an connectivity tool.
+
+***With the help of JDBC, we can :
+ * Connect to a data source(database)
+ * Send queries and update statements to the database
+ * Process the results received from database
+
+***How to connect Database?
+With the DriverManager class ==>> DriverManager.getConnection(host url, username, password) ==>> return Connection
+
+***How to send queries?
+We can send queries written in structured query language (SQL) and process the results.
+From the connection we created, first we create statement and with the help of this statement we send queries to database.
+statement.executeQuery("sql query");
+
+***statement.executeQuery returns a ResultSet object. In this ResultSet object we can access the data through 'cursor'.
+Cursor is a pointer,and points to one row of data in the ResultSet object.
+For the first time, cursor is positioned before the first row. We need to use next() method to reach the first row.
+
+***In my framework, I added postgresql 42.5.1 version dependency as a jar file.(I can also add it as dependency from Maven)
+
+*** STEPS TO EXECUTE QUERY THROUGH JDBC ***
+ 1. Step: Registration to the driver
+    Class.forName("org.postgresql.Driver"); => It throws ClassNotFoundException exception
+ 2. Step: Create connection with database
+    Connection con = DriverManager.getConnection("jdbc:postgresql://localhost:5432/postgres","postgres","4168263009htc");
+ 3. Step: Create statement
+    Statement st = con.createStatement();
+    System.out.println("Connection Success");
+ 4. Step: Execute the query
+    String sql1 = "CREATE TABLE workers(worker_id VARCHAR(50), worker_name VARCHAR(20), worker_salary INT )";
+    st.execute(sql1);
+    Note : execute() method returns boolean
+            It can be used in DDL(Table creation, drop table, alter table) and in DQL(Select)
+            1)If you use execute() method in DDL you will get false everytime.
+            2)If you use execute() method in DQL you will get false or true
+              When you use execute() method in DQL, if you get ResultSet Object as return you will get true otherwise you will get false.
+ 5. Step: Close the connection and statement
+    con.close();
+    st.close();
+ 6. To see the records we use "executeQuery()".
+    It returns ResultSet object
+      ResultSet resultSet = st.executeQuery(sqlQueryInString);
+    And use while loop to navigate forward next rows
+      while(resultSet.next()) {
+           System.out.println(resultSet.getString("column_name")); //We can use column name or column index (1) as well
+      }
+
+    # Column index starts from "1" (index 0 is the headers, not the exact data)
+
+ 7. If we update a data in database, then we do not use 'statement.executeQuery() method', so we use 'statement.executeUpdate()'' method
+    executeUpdate() method returns  ==>> int (How many rows are updated)
+
+    To check if the data is updated or not, execute query 'Select * From Table_name' and using executeQuery() method get the ResultSet obj
+    and get and read the data from database
+
+ 8. Prepared Statement :
+    A prepared statement is a feature used to execute the same SQL statement repeatedly with different data.
+    Prepared statements basically work like this:
+    Prepare: First create a SQL statement template and parameterize the data using "?".
+    Before send the sql query to the database assign values to these parameters using setInt(), setString()... methods.
+    Finally execute the query.
+    Do the same operation whenever want to send the same statement with different data.
+    No need to send the whole query every time, send only the parameters each time.
+
+ 9. How do you call stored procedures in JDBC Application? => Callable Statement :
+    We can create an object of the CallableStatement (interface) using the prepareCall() method of the Connection interface.
+    This method accepts a string variable representing a query to call the stored procedure. It returns a CallableStatement object.
+         ==>> "CallableStatement cst1 = con.prepareCall("{? = call additionF(?, ?) }");"
+    We use cst1.registerOutParameter(1,Types.NUMERIC) ==>> to identify the generic sql type as NUMERIC
+    and set() methods to assign values to parameters (setInt()...) ==>>  Ex : cst1.setInt(2,6)
+    And we use execute() method to get result for the specific values. ==>> "cst1.execute();"
